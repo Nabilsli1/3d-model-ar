@@ -1,23 +1,54 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-  <head>
-    <title>3D Model AR Viewer</title>
+<head>
+    <title>AR Model Viewer</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- iOS specific meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Model Viewer script -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
-  </head>
-  <body>
-    <model-viewer 
-      src="05_07_2025.glb" 
-      ar 
-      ar-modes="webxr scene-viewer quick-look" 
-      camera-controls 
-      alt="My 3D Model" 
-      style="width: 100%; height: 100vh;"
+    <style>
+        body, html { margin: 0; padding: 0; overflow: hidden; }
+        model-viewer { width: 100%; height: 100vh; }
+    </style>
+</head>
+<body>
+    <model-viewer
+        id="ar-model"
+        src="05_07_2025.glb"
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        camera-controls
+        environment-image="neutral"
+        xr-environment
+        auto-rotate
+        alt="3D Model"
     >
-      <button slot="ar-button">
-        View in AR
-      </button>
+        <!-- Fallback button (hidden) -->
+        <button slot="ar-button" id="ar-button" style="display: none;"></button>
     </model-viewer>
-  </body>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modelViewer = document.getElementById('ar-model');
+            const arButton = document.getElementById('ar-button');
+            
+            // Auto-trigger AR on page load (works on most devices)
+            setTimeout(() => {
+                if (arButton) {
+                    arButton.click(); // Programmatically click the AR button
+                }
+            }, 500); // Small delay to ensure model is loaded
+            
+            // Fallback for iOS 16+ (requires user gesture)
+            modelViewer.addEventListener('click', () => {
+                if (arButton) {
+                    arButton.click();
+                }
+            });
+        });
+    </script>
+</body>
 </html>
