@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AR Model Gallery</title>
+    <title>AR Model Viewer</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,20 +15,48 @@
         }
         
         .model-container {
+            position: relative;
             width: 100vw;
             height: 100vh;
-            display: flex;
-            scroll-snap-type: x mandatory;
-            overflow-x: scroll;
         }
         
         model-viewer {
-            flex: 0 0 100%;
-            scroll-snap-align: start;
-            position: relative;
+            width: 100%;
+            height: 100%;
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
         
-        .ar-prompt {
+        model-viewer.active {
+            display: block;
+        }
+        
+        .nav-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            z-index: 100;
+            cursor: pointer;
+        }
+        
+        #prev-btn {
+            left: 10px;
+        }
+        
+        #next-btn {
+            right: 10px;
+        }
+        
+        .ar-button {
             position: fixed;
             bottom: 20px;
             left: 50%;
@@ -37,7 +65,7 @@
             color: white;
             padding: 10px 20px;
             border-radius: 20px;
-            font-size: 14px;
+            border: none;
             z-index: 100;
         }
     </style>
@@ -47,13 +75,14 @@
         <!-- First Model -->
         <model-viewer
             id="model1"
+            class="active"
             src="pizzahouma.glb"
             ar
             ar-modes="quick-look webxr scene-viewer"
             camera-controls
             environment-image="neutral"
             xr-environment
-            alt="Pizza Houma Model"
+            alt="First Model"
         >
             <button slot="ar-button" style="display: none;"></button>
         </model-viewer>
@@ -61,54 +90,63 @@
         <!-- Second Model -->
         <model-viewer
             id="model2"
-            src="05_07_2025.glb" <!-- Replace with your second model -->
+            src="second-model.glb"
             ar
             ar-modes="quick-look webxr scene-viewer"
             camera-controls
             environment-image="neutral"
             xr-environment
-            alt="Gazouz"
+            alt="Second Model"
         >
             <button slot="ar-button" style="display: none;"></button>
         </model-viewer>
     </div>
     
-    <div class="ar-prompt">Swipe left/right to view models • Tap to open AR</div>
+    <button id="prev-btn" class="nav-button">←</button>
+    <button id="next-btn" class="nav-button">→</button>
+    <button class="ar-button">View in AR</button>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Auto-trigger AR when model is visible
             const models = document.querySelectorAll('model-viewer');
-            const container = document.querySelector('.model-container');
-            
-            // Track current visible model
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const arButton = document.querySelector('.ar-button');
             let currentModelIndex = 0;
             
-            // Auto-launch AR for the visible model
-            function launchAR() {
-                const arButton = models[currentModelIndex].querySelector('[slot="ar-button"]');
-                if (arButton) {
-                    setTimeout(() => {
-                        arButton.click();
-                    }, 300);
-                }
+            // Show current model and hide others
+            function showModel(index) {
+                models.forEach((model, i) => {
+                    model.classList.toggle('active', i === index);
+                });
+                currentModelIndex = index;
             }
             
-            // Handle swipe detection
-            container.addEventListener('scroll', () => {
-                const newIndex = Math.round(container.scrollLeft / window.innerWidth);
-                if (newIndex !== currentModelIndex) {
-                    currentModelIndex = newIndex;
+            // Navigation buttons
+            prevBtn.addEventListener('click', () => {
+                const newIndex = (currentModelIndex - 1 + models.length) % models.length;
+                showModel(newIndex);
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                const newIndex = (currentModelIndex + 1) % models.length;
+                showModel(newIndex);
+            });
+            
+            // AR button triggers AR for current model
+            arButton.addEventListener('click', () => {
+                const currentModel = models[currentModelIndex];
+                const arBtn = currentModel.querySelector('[slot="ar-button"]');
+                if (arBtn) {
+                    arBtn.click();
                 }
             });
             
-            // Tap to open AR
-            container.addEventListener('click', () => {
-                launchAR();
+            // Auto-rotate models (optional)
+            models.forEach(model => {
+                model.autoRotate = true;
+                model.autoRotateDelay = 0;
             });
-            
-            // Initial AR trigger (optional)
-            setTimeout(launchAR, 500);
         });
     </script>
 </body>
