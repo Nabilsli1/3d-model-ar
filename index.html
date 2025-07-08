@@ -1,53 +1,114 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AR Model Viewer</title>
+    <title>AR Model Gallery</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- iOS specific meta tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <!-- Model Viewer script -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; overflow: hidden; }
-        model-viewer { width: 100%; height: 100vh; }
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: -apple-system, sans-serif;
+        }
+        
+        .model-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            scroll-snap-type: x mandatory;
+            overflow-x: scroll;
+        }
+        
+        model-viewer {
+            flex: 0 0 100%;
+            scroll-snap-align: start;
+            position: relative;
+        }
+        
+        .ar-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
-    <model-viewer
-        id="ar-model"
-        src="pizzahouma.glb"
-        ar
-        ar-modes="webxr scene-viewer quick-look"
-        camera-controls
-        environment-image="neutral"
-        xr-environment
-        auto-rotate
-        alt="3D Model"
-    >
-        <!-- Fallback button (hidden) -->
-        <button slot="ar-button" id="ar-button" style="display: none;"></button>
-    </model-viewer>
+    <div class="model-container">
+        <!-- First Model -->
+        <model-viewer
+            id="model1"
+            src="pizzahouma.glb"
+            ar
+            ar-modes="quick-look webxr scene-viewer"
+            camera-controls
+            environment-image="neutral"
+            xr-environment
+            alt="Pizza Houma Model"
+        >
+            <button slot="ar-button" style="display: none;"></button>
+        </model-viewer>
+        
+        <!-- Second Model -->
+        <model-viewer
+            id="model2"
+            src="05_07_2025.glb" <!-- Replace with your second model -->
+            ar
+            ar-modes="quick-look webxr scene-viewer"
+            camera-controls
+            environment-image="neutral"
+            xr-environment
+            alt="Gazouz"
+        >
+            <button slot="ar-button" style="display: none;"></button>
+        </model-viewer>
+    </div>
+    
+    <div class="ar-prompt">Swipe left/right to view models • Tap to open AR</div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const modelViewer = document.getElementById('ar-model');
-            const arButton = document.getElementById('ar-button');
+            // Auto-trigger AR when model is visible
+            const models = document.querySelectorAll('model-viewer');
+            const container = document.querySelector('.model-container');
             
-            // Auto-trigger AR on page load (works on most devices)
-            setTimeout(() => {
+            // Track current visible model
+            let currentModelIndex = 0;
+            
+            // Auto-launch AR for the visible model
+            function launchAR() {
+                const arButton = models[currentModelIndex].querySelector('[slot="ar-button"]');
                 if (arButton) {
-                    arButton.click(); // Programmatically click the AR button
+                    setTimeout(() => {
+                        arButton.click();
+                    }, 300);
                 }
-            }, 500); // Small delay to ensure model is loaded
+            }
             
-            // Fallback for iOS 16+ (requires user gesture)
-            modelViewer.addEventListener('click', () => {
-                if (arButton) {
-                    arButton.click();
+            // Handle swipe detection
+            container.addEventListener('scroll', () => {
+                const newIndex = Math.round(container.scrollLeft / window.innerWidth);
+                if (newIndex !== currentModelIndex) {
+                    currentModelIndex = newIndex;
                 }
             });
+            
+            // Tap to open AR
+            container.addEventListener('click', () => {
+                launchAR();
+            });
+            
+            // Initial AR trigger (optional)
+            setTimeout(launchAR, 500);
         });
     </script>
 </body>
