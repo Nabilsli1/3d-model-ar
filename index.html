@@ -84,7 +84,7 @@
             xr-environment
             alt="First Model"
         >
-            <button slot="ar-button" style="display: none;"></button>
+            <button slot="ar-button" id="ar-button1" style="display: none;"></button>
         </model-viewer>
         
         <!-- Second Model -->
@@ -98,7 +98,7 @@
             xr-environment
             alt="Second Model"
         >
-            <button slot="ar-button" style="display: none;"></button>
+            <button slot="ar-button" id="ar-button2" style="display: none;"></button>
         </model-viewer>
     </div>
     
@@ -114,7 +114,6 @@
             const arButton = document.querySelector('.ar-button');
             let currentModelIndex = 0;
             
-            // Show current model and hide others
             function showModel(index) {
                 models.forEach((model, i) => {
                     model.classList.toggle('active', i === index);
@@ -122,7 +121,6 @@
                 currentModelIndex = index;
             }
             
-            // Navigation buttons
             prevBtn.addEventListener('click', () => {
                 const newIndex = (currentModelIndex - 1 + models.length) % models.length;
                 showModel(newIndex);
@@ -133,11 +131,24 @@
                 showModel(newIndex);
             });
             
-            // AR button triggers AR for current model
+            // Modified AR button functionality
             arButton.addEventListener('click', () => {
                 const currentModel = models[currentModelIndex];
                 const arBtn = currentModel.querySelector('[slot="ar-button"]');
-                if (arBtn) {
+                
+                // For iOS Quick Look
+                if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                    // Create a temporary anchor tag to trigger the AR quick look
+                    const tempLink = document.createElement('a');
+                    tempLink.href = currentModel.src;
+                    tempLink.setAttribute('rel', 'ar');
+                    tempLink.appendChild(document.createElement('img'));
+                    document.body.appendChild(tempLink);
+                    tempLink.click();
+                    document.body.removeChild(tempLink);
+                } 
+                // For Android and other devices
+                else if (arBtn) {
                     arBtn.click();
                 }
             });
