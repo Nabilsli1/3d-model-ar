@@ -83,6 +83,7 @@
             environment-image="neutral"
             xr-environment
             alt="First Model"
+            quick-look-browsers="safari"
         >
             <button slot="ar-button" id="ar-button1" style="display: none;"></button>
         </model-viewer>
@@ -97,6 +98,7 @@
             environment-image="neutral"
             xr-environment
             alt="Second Model"
+            quick-look-browsers="safari"
         >
             <button slot="ar-button" id="ar-button2" style="display: none;"></button>
         </model-viewer>
@@ -131,29 +133,29 @@
                 showModel(newIndex);
             });
             
-            // Modified AR button functionality
+            // FIXED AR button functionality
             arButton.addEventListener('click', () => {
                 const currentModel = models[currentModelIndex];
                 const arBtn = currentModel.querySelector('[slot="ar-button"]');
                 
-                // For iOS Quick Look
-                if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                    // Create a temporary anchor tag to trigger the AR quick look
-                    const tempLink = document.createElement('a');
-                    tempLink.href = currentModel.src;
-                    tempLink.setAttribute('rel', 'ar');
-                    tempLink.appendChild(document.createElement('img'));
-                    document.body.appendChild(tempLink);
-                    tempLink.click();
-                    document.body.removeChild(tempLink);
-                } 
-                // For Android and other devices
-                else if (arBtn) {
+                // Use the native model-viewer AR button click
+                if (arBtn) {
                     arBtn.click();
                 }
             });
             
-            // Auto-rotate models (optional)
+            // Alternative: Direct AR trigger for better iOS support
+            models.forEach((model, index) => {
+                model.addEventListener('load', () => {
+                    console.log(`Model ${index + 1} loaded successfully`);
+                });
+                
+                model.addEventListener('error', (event) => {
+                    console.error(`Model ${index + 1} error:`, event.detail);
+                });
+            });
+            
+            // Auto-rotate models
             models.forEach(model => {
                 model.autoRotate = true;
                 model.autoRotateDelay = 0;
@@ -162,4 +164,3 @@
     </script>
 </body>
 </html>
- 
