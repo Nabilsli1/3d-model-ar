@@ -7,62 +7,157 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     <style>
-        body, html {
+        body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            height: 100vh;
-            touch-action: manipulation;
+            font-family: -apple-system, sans-serif;
         }
+        
+        .model-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
         model-viewer {
             width: 100%;
             height: 100%;
-        }
-        .ar-overlay {
-            position: fixed;
+            display: none;
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+        }
+        
+        model-viewer.active {
+            display: block;
+        }
+        
+        .nav-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
             z-index: 100;
-            background: transparent;
+            cursor: pointer;
+        }
+        
+        #prev-btn {
+            left: 10px;
+        }
+        
+        #next-btn {
+            right: 10px;
+        }
+        
+        .ar-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: none;
+            z-index: 100;
         }
     </style>
 </head>
 <body>
-    <!-- Transparent overlay that triggers AR -->
-    <div class="ar-overlay" id="ar-overlay"></div>
+    <div class="model-container">
+        <!-- First Model -->
+        <model-viewer
+            id="model1"
+            class="active"
+            src="pizzahouma.glb"
+            ar
+            ar-modes="quick-look webxr scene-viewer"
+            camera-controls
+            environment-image="neutral"
+            xr-environment
+            alt="First Model"
+        >
+            <button slot="ar-button" id="ar-button1" style="display: none;"></button>
+        </model-viewer>
+        
+        <!-- Second Model -->
+        <model-viewer
+            id="model2"
+            src="second-model.glb"
+            ar
+            ar-modes="quick-look webxr scene-viewer"
+            camera-controls
+            environment-image="neutral"
+            xr-environment
+            alt="Second Model"
+        >
+            <button slot="ar-button" id="ar-button2" style="display: none;"></button>
+        </model-viewer>
+    </div>
     
-    <model-viewer
-        id="model1"
-        src="pizzahouma.glb"
-        ar
-        ar-modes="quick-look"
-        camera-controls
-        environment-image="neutral"
-        alt="3D Model"
-    >
-        <button slot="ar-button" id="ar-button" style="display: none;"></button>
-    </model-viewer>
+    <button id="prev-btn" class="nav-button">←</button>
+    <button id="next-btn" class="nav-button">→</button>
+    <button class="ar-button">View in AR</button>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const overlay = document.getElementById('ar-overlay');
-            const arButton = document.getElementById('ar-button');
+            const models = document.querySelectorAll('model-viewer');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const arButton = document.querySelector('.ar-button');
+            let currentModelIndex = 0;
             
-            // Trigger AR on any touch (minimum interaction)
-            overlay.addEventListener('click', () => {
-                setTimeout(() => {
-                    arButton.click();
-                    overlay.style.display = 'none'; // Hide after triggering
-                }, 100);
+            function showModel(index) {
+                models.forEach((model, i) => {
+                    model.classList.toggle('active', i === index);
+                });
+                currentModelIndex = index;
+            }
+            
+            prevBtn.addEventListener('click', () => {
+                const newIndex = (currentModelIndex - 1 + models.length) % models.length;
+                showModel(newIndex);
             });
             
-            // Auto-focus the model viewer (helps with quick triggering)
-            setTimeout(() => {
-                const modelViewer = document.querySelector('model-viewer');
-                modelViewer.focus();
-            }, 500);
+            nextBtn.addEventListener('click', () => {
+                const newIndex = (currentModelIndex + 1) % models.length;
+                showModel(newIndex);
+            });
+            
+            // Modified AR button functionality
+            arButton.addEventListener('click', () => {
+                const currentModel = models[currentModelIndex];
+                const arBtn = currentModel.querySelector('[slot="ar-button"]');
+                
+                // For iOS Quick Look
+                if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                    // Create a temporary anchor tag to trigger the AR quick look
+                    const tempLink = document.createElement('a');
+                    tempLink.href = currentModel.src;
+                    tempLink.setAttribute('rel', 'ar');
+                    tempLink.appendChild(document.createElement('img'));
+                    document.body.appendChild(tempLink);
+                    tempLink.click();
+                    document.body.removeChild(tempLink);
+                } 
+                // For Android and other devices
+                else if (arBtn) {
+                    arBtn.click();
+                }
+            });
+            
+            // Auto-rotate models (optional)
+            models.forEach(model => {
+                model.autoRotate = true;
+                model.autoRotateDelay = 0;
+            });
         });
     </script>
 </body>
